@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perplexity Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --primary: #1877f2;
+      --secondary: #f0f2f5;
+      --assistant: #ece3fc;
+      --user: #def3e0;
+      --border: #e0e2e6;
+      --text: #212529;
+      --bubble-radius: 1.4em;
+    }
+    body {
+      background: var(--secondary);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+    }
+    .app-container {
+      max-width: 500px;
+      margin: 3em auto 2em;
+      background: #fff;
+      border-radius: 1.5em;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1.5px 6px rgba(24,119,242,0.07);
+      display: flex;
+      flex-direction: column;
+      min-height: 70vh;
+    }
+    .header {
+      text-align: center;
+      padding: 2em 2em 0.5em 2em;
+    }
+    .header h2 {
+      letter-spacing: 0.03em;
+      color: var(--primary);
+      margin-bottom: 0.5em;
+      font-weight: 700;
+    }
+    .chat-area {
+      padding: 1em 1em 0 1em;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35em;
+      background: var(--secondary);
+      border-top-left-radius: 1em;
+      border-top-right-radius: 1em;
+      min-height: 300px;
+      max-height: 360px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 0.6em 1em;
+      margin-bottom: 0.4em;
+      display: inline-block;
+      border-radius: var(--bubble-radius);
+      box-shadow: 0 2px 10px rgba(24,119,242,0.02);
+      font-size: 1em;
+      position: relative;
+      word-break: break-word;
+      animation: fadeIn 0.2s;
+    }
+    .msg-user {
+      background: var(--user);
+      align-self: flex-end;
+      border-bottom-right-radius: 0.3em;
+      border-top-right-radius: var(--bubble-radius);
+    }
+    .msg-assistant {
+      background: var(--assistant);
+      align-self: flex-start;
+      border-bottom-left-radius: 0.3em;
+      border-top-left-radius: var(--bubble-radius);
+    }
+    .timestamp {
+      font-size: 0.75em;
+      color: #a4a6a9;
+      margin-left: 8px;
+      margin-right: 0;
+      vertical-align: middle;
+      user-select: none;
+    }
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      border-bottom-right-radius: 1.5em;
+      border-bottom-left-radius: 1.5em;
+      padding: 1.2em 1.2em 1.3em;
+    }
+    textarea {
+      padding: 0.75em 1em;
+      border: 1px solid var(--border);
+      border-radius: 0.7em;
+      resize: none;
+      font-size: 1em;
+      font-family: inherit;
+      height: 48px;
+      margin-bottom: 0.5em;
+      background: #f8fafc;
+      transition: border 0.18s;
+    }
+    textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      background: #fff;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 0.7em;
+      padding: 0.7em 2.1em;
+      font-size: 1em;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-left: auto;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(24,119,242,0.11);
+      transition: background 0.15s;
+    }
+    button:hover {
+      background: #0f66dc;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(12px);}
+      100% { opacity: 1; transform: none;}
+    }
+    @media (max-width: 590px) {
+      .app-container { max-width: 100%; margin: 0; border-radius: 0;}
+      .header { padding: 1em 0.2em 0.4em; }
+      .input-area { padding: 1em 0.5em; }
+      .chat-area { padding: 0.8em 0.4em 0 0.4em;}
+    }
+  </style>
+</head>
+<body>
+<!-- ... (keep your previous <head> and CSS) ... -->
+  <div class="app-container">
+    <!-- ...header, chat-area leftovers... -->
+    <div class="chat-area" id="chat"></div>
+    <form class="input-area" onsubmit="event.preventDefault(); sendMessage();">
+      <textarea id="userInput" rows="2" placeholder="Ask me anything..." required autofocus></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  
+  <script>
+    const API_KEY = "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";
+    const messages = [
+      { role: "system", content: "You are a helpful assistant." }
+    ];
+    const chat = document.getElementById('chat');
+    const userInput = document.getElementById('userInput');
+
+    function formatTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Basic Markdown to HTML (bullets/numbering only)
+    function simpleMarkdownToHTML(text) {
+      // Convert numbered lists to <ol>
+      text = text.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
+      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>');
+      // Convert bullet lists to <ul>
+      text = text.replace(/^\s*[-*+]\s(.+)$/gm, '<li>$1</li>');
+      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+      // Bold and italics (optional)
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      text = text.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+      // Simple paragraph formatting
+      text = text.replace(/\n\n/g, '<br><br>');
+      return text;
+    }
+
+    function appendMessage(content, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message ' + (sender === 'user' ? 'msg-user' : 'msg-assistant');
+      if (sender === "assistant") {
+        msgDiv.innerHTML = simpleMarkdownToHTML(content) + ` <span class="timestamp">${formatTime()}</span>`;
+      } else {
+        msgDiv.textContent = content + " ";
+        msgDiv.innerHTML += `<span class="timestamp">${formatTime()}</span>`;
+      }
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      userInput.value = '';
+      userInput.focus();
+      messages.push({ role: "user", content: text });
+
+      appendMessage("Thinking...", "assistant");
+      chat.scrollTop = chat.scrollHeight;
+
+      const endpoint = "https://api.perplexity.ai/chat/completions";
+      const body = {
+        model: "sonar-pro",
+        messages: messages
+      };
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+        const result = await response.json();
+        // Remove "Thinking..."
+        const bubbles = document.querySelectorAll('.msg-assistant');
+        if (bubbles[bubbles.length - 1].innerText.startsWith('Thinking')) {
+          bubbles[bubbles.length - 1].remove();
+        }
+        const reply = (result.choices && result.choices[0] && result.choices[0].message.content) ? result.choices[0].message.content : "No reply or an error occurred.";
+        appendMessage(reply, "assistant");
+        messages.push({ role: "assistant", content: reply });
+      } catch (err) {
+        const bubbles = document.querySelectorAll('.msg-assistant');
+        if (bubbles[bubbles.length - 1].innerText.startsWith('Thinking')) {
+          bubbles[bubbles.length - 1].remove();
+        }
+        appendMessage("Error: " + err.message, "assistant");
+      }
+    }
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+<!-- ... -->  
+</body>
+</html>
