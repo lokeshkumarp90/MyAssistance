@@ -139,12 +139,23 @@
       .input-area { padding: 1em 0.5em; }
       .chat-area { padding: 0.8em 0.4em 0 0.4em;}
     }
+    .welcome-message {
+      color: #6a11cb;
+      text-align: center;
+      font-size: 1.17rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      margin-bottom: 1rem;
+      margin-top: 1rem;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
 <!-- ... (keep your previous <head> and CSS) ... -->
   <div class="app-container">
     <!-- ...header, chat-area leftovers... -->
+    <div class="welcome-message">Welcome and Happy to assit you today!</div>
     <div class="chat-area" id="chat"></div>
     <form class="input-area" onsubmit="event.preventDefault(); sendMessage();">
       <textarea id="userInput" rows="2" placeholder="Ask me anything..." required autofocus></textarea>
@@ -276,6 +287,7 @@
 <!-- ... -->  
 </body>
 </html>
+
 
 
 
