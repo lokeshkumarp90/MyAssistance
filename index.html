@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>My Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Assistance Style -->
   <style>
     :root {
       --primary: #1877f2;
@@ -51,7 +52,7 @@
       background: var(--secondary);
       border-top-left-radius: 1em;
       border-top-right-radius: 1em;
-      min-height: 300px;
+      min-height: 250px;
       max-height: 360px;
     }
     .message {
@@ -93,7 +94,7 @@
       background: #fff;
       border-bottom-right-radius: 1.5em;
       border-bottom-left-radius: 1.5em;
-      padding: 1.2em 1.2em 1.3em;
+      padding: 1em 1em 1em;
     }
     textarea {
       padding: 0.75em 1em;
@@ -150,6 +151,63 @@
       user-select: none;
     }
   </style>
+  <!-- Help Section Style -->
+  <style>
+  /* The Modal (background) */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  /* Modal Content */
+  .modal-content {
+    background-color: #fff;
+    margin: auto;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  /* Close Button */
+  .close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close-btn:hover,
+  .close-btn:focus {
+    color: black;
+    text-decoration: none;
+  }
+  
+  #helpBtn{
+   background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,123,255,0.4);
+  transition: background-color 0.3s ease;
+  }
+</style>
 </head>
 <body>
 <!-- ... (keep your previous <head> and CSS) ... -->
@@ -162,11 +220,34 @@
       <button type="submit">Send</button>
     </form>
   </div>
- <p style="margin-top: 2em; font-size: 0.9em; color: #555;">
-    If you are getting the Failed to Fetch error then Visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" rel="noopener noreferrer">
-      Click "Request temporary access to the demo server"
-    </a> 
- </p>
+ <!-- Trigger/Open The Modal -->
+<!-- <button id="helpBtn">Open Help</button> -->
+
+<button id="helpBtn">
+	<!-- Help icon (SVG) -->
+	<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+		<circle cx="12" cy="12" r="10"/>
+		<path d="M9.09 9a3 3 0 1 1 5.83 1c-.27 1.07-3 1.5-3 3"/>
+		<line x1="12" y1="17" x2="12" y2="17"/>
+	</svg>
+  Help
+</button>
+
+<!-- The Modal -->
+<div id="helpModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeHelp">&times;</span>
+    <h2>Instructions</h2>
+    <p>Please follow the below instructions based on the error you recived while trying to use the assistance.</p>
+    <ul>
+      <li>
+	  Error 1: <b>"The string did not match the expected pattern"</b> then Visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" rel="noopener noreferrer">
+       Click "Request temporary access to the demo server"</a>
+	   </li>
+      <li>Error 2: <b>"No reply or an error occured"</b> then reload link again <a href="https://lokeshkumarp90.github.io/MyAssistance/" target="" rel="noopener noreferrer"> Reload the Assistance <a/></li>
+    </ul>
+  </div>
+</div>
   <script>
     const API_KEY = "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";
     const messages = [
@@ -239,29 +320,37 @@
         const result = await response.json();
         // Remove "Thinking..."
         const bubbles = document.querySelectorAll('.msg-assistant');
+		if ( bubbles &&  bubbles.length > 0 &&  typeof bubbles[bubbles.length - 1].innerText !== 'undefined'){
+
         if (bubbles[bubbles.length - 1].innerText.startsWith('Thinking')) {
           bubbles[bubbles.length - 1].remove();
         }
         const reply = (result.choices && result.choices[0] && result.choices[0].message.content) ? result.choices[0].message.content : "No reply or an error occurred.";
         appendMessage(reply, "assistant");
         messages.push({ role: "assistant", content: reply });
-      } catch (err) {
+		}
+      }
+	  catch (err) {
         const bubbles = document.querySelectorAll('.msg-assistant');
+		if ( bubbles &&  bubbles.length > 0 &&  typeof bubbles[bubbles.length - 1].innerText !== 'undefined') {			
         if (bubbles[bubbles.length - 1].innerText.startsWith('Thinking')) {
           bubbles[bubbles.length - 1].remove();
         }
         appendMessage("Error: " + err.message, "assistant");
+		}
       }
     }
-    userInput.addEventListener("keydown", (e) => {
+    
+  </script>
+  <script>
+  userInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
-  </script>
-  <script>
-  // Disable right click context menu
+	
+	// Disable right click context menu
   document.addEventListener('contextmenu', event => event.preventDefault());
 
   // Disable common keyboard shortcuts for devtools
@@ -283,15 +372,41 @@
       event.preventDefault();
     }
   });
+  </script>
+  <script>
+  
+  document.querySelector('button').addEventListener('click', function() {  
+    const threshold = 160;
+  setInterval(() => {
+    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+    if (widthThreshold || heightThreshold) {
+      document.body.innerHTML = 'Access Denied';
+    }
+  }, 1000);
+});
+
+  // Get modal and buttons
+  const modal = document.getElementById("helpModal");
+  const btn = document.getElementById("helpBtn");
+  const closeBtn = document.getElementById("closeHelp");
+
+  // When the user clicks on the button, open the modal
+  btn.onclick = () => {
+    modal.style.display = "block";
+  };
+
+  // When the user clicks on the close button, close the modal
+  closeBtn.onclick = () => {
+    modal.style.display = "none";
+  };
+
+  // When the user clicks anywhere outside the modal content, close it
+  window.onclick = (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  };
 </script>
-<!-- ... -->  
 </body>
 </html>
-
-
-
-
-
-
-
-
