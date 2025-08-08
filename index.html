@@ -374,18 +374,6 @@
   });
   </script>
   <script>
-  
-  document.querySelector('button').addEventListener('click', function() {  
-    const threshold = 160;
-  setInterval(() => {
-    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-    if (widthThreshold || heightThreshold) {
-      document.body.innerHTML = 'Access Denied';
-    }
-  }, 1000);
-});
-
   // Get modal and buttons
   const modal = document.getElementById("helpModal");
   const btn = document.getElementById("helpBtn");
@@ -410,3 +398,4 @@
 </script>
 </body>
 </html>
+
