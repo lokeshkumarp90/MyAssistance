@@ -230,13 +230,6 @@
       return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
 
-    // function appendMessage(content, sender) {
-      // const msgDiv = document.createElement('div');
-      // msgDiv.className = 'message ' + (sender === 'user' ? 'msg-user' : 'msg-assistant');
-      // msgDiv.innerHTML = content + ` <span class="timestamp">${formatTime()}</span>`;
-      // chat.appendChild(msgDiv);
-      // chat.scrollTop = chat.scrollHeight;
-    // }
 	// Basic Markdown to HTML (bullets/numbering only)
     function simpleMarkdownToHTML(text) {
       // Convert numbered lists to <ol>
@@ -295,6 +288,35 @@
         appendMessage("Error: " + err.message, "assistant");
       }
     }
+	userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+	// Disable right click context menu
+  document.addEventListener('contextmenu', event => event.preventDefault());
+
+  // Disable common keyboard shortcuts for devtools
+  document.addEventListener('keydown', function(event) {
+    // F12 key
+    if (event.key === 'F12') {
+      event.preventDefault();
+    }
+    // Ctrl + Shift + I (Inspect)
+    if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') {
+      event.preventDefault();
+    }
+    // Ctrl + Shift + J (Console)
+    if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'j') {
+      event.preventDefault();
+    }
+    // Ctrl + U (View Source)
+    if (event.ctrlKey && event.key.toLowerCase() === 'u') {
+      event.preventDefault();
+    }
+  });  
   </script>
 </body>
 </html>
+
