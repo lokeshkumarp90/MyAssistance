@@ -251,10 +251,31 @@
       return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
 
+    // Basic Markdown to HTML (bullets/numbering only)
+    function simpleMarkdownToHTML(text) {
+      // Convert numbered lists to <ol>
+      text = text.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
+      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>');
+      // Convert bullet lists to <ul>
+      text = text.replace(/^\s*[-*+]\s(.+)$/gm, '<li>$1</li>');
+      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+      // Bold and italics (optional)
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      text = text.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+      // Simple paragraph formatting
+      text = text.replace(/\n\n/g, '<br><br>');
+      return text;
+    }
+
     function appendMessage(content, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'message ' + (sender === 'user' ? 'msg-user' : 'msg-assistant');
-      msgDiv.innerHTML = content + ` <span class="timestamp">${formatTime()}</span>`;
+      if (sender === "assistant") {
+        msgDiv.innerHTML = simpleMarkdownToHTML(content) + ` <span class="timestamp">${formatTime()}</span>`;
+      } else {
+        msgDiv.textContent = content + " ";
+        msgDiv.innerHTML += `<span class="timestamp">${formatTime()}</span>`;
+      }
       chat.appendChild(msgDiv);
       chat.scrollTop = chat.scrollHeight;
     }
