@@ -215,6 +215,26 @@
     </form>
   </div>
 
+  <!-- HELP BUTTON -->
+  <button id="helpBtn">Help</button>
+
+  <!-- HELP MODAL -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeHelp">&times;</span>
+      <h2>Instructions</h2>
+      <p>If you get an error, try the following:</p>
+      <ul>
+        <li>Error 1: <b>"The string did not match the expected pattern"</b> → 
+          <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Request temporary access</a>
+        </li>
+        <li>Error 2: <b>"No reply or error occurred"</b> → 
+          <a href="https://lokeshkumarp90.github.io/MyAssistance/" target="_blank">Reload the Assistant</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer>
     &copy; 2025 AI Assistance. All rights reserved.
@@ -222,6 +242,7 @@
 
   <!-- JS (kept from your original) -->
   <script>
+    const API_KEY = "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";
     const messages = [{ role: "system", content: "You are a helpful assistant." }];
     const chat = document.getElementById('chat');
     const userInput = document.getElementById('userInput');
@@ -230,31 +251,10 @@
       return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
 
-	// Basic Markdown to HTML (bullets/numbering only)
-    function simpleMarkdownToHTML(text) {
-      // Convert numbered lists to <ol>
-      text = text.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
-      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>');
-      // Convert bullet lists to <ul>
-      text = text.replace(/^\s*[-*+]\s(.+)$/gm, '<li>$1</li>');
-      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-      // Bold and italics (optional)
-      text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-      text = text.replace(/\*([^*]+)\*/g, '<i>$1</i>');
-      // Simple paragraph formatting
-      text = text.replace(/\n\n/g, '<br><br>');
-      return text;
-    }
-	
-	function appendMessage(content, sender) {
+    function appendMessage(content, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'message ' + (sender === 'user' ? 'msg-user' : 'msg-assistant');
-      if (sender === "assistant") {
-        msgDiv.innerHTML = simpleMarkdownToHTML(content) + ` <span class="timestamp">${formatTime()}</span>`;
-      } else {
-        msgDiv.textContent = content + " ";
-        msgDiv.innerHTML += `<span class="timestamp">${formatTime()}</span>`;
-      }
+      msgDiv.innerHTML = content + ` <span class="timestamp">${formatTime()}</span>`;
       chat.appendChild(msgDiv);
       chat.scrollTop = chat.scrollHeight;
     }
@@ -264,15 +264,26 @@
       if (!text) return;
       appendMessage(text, 'user');
       userInput.value = '';
+      userInput.focus();
       messages.push({ role: "user", content: text });
 
       appendMessage("Thinking...", "assistant");
-
+	  
+	  const endpoint = "https://api.perplexity.ai/chat/completions";
+      const body = {
+        model: "sonar-pro",
+        messages: messages
+      };
+	  
       try {
-        const response = await fetch("https://perplexity-proxy-iuag.onrender.com/call-api", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages })
+		const corsProxy = "https://cors-anywhere.herokuapp.com/";
+        const response = await fetch(corsProxy + endpoint, {
+          method: 'POST',
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
         });
         const result = await response.json();
         document.querySelectorAll('.msg-assistant').forEach(el => {
@@ -288,12 +299,20 @@
         appendMessage("Error: " + err.message, "assistant");
       }
     }
+
+    // Help modal logic
+    const modal = document.getElementById("helpModal");
+    document.getElementById("helpBtn").onclick = () => modal.style.display = "block";
+    document.getElementById("closeHelp").onclick = () => modal.style.display = "none";
+    window.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
+	
 	userInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
+	
 	// Disable right click context menu
   document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -315,8 +334,7 @@
     if (event.ctrlKey && event.key.toLowerCase() === 'u') {
       event.preventDefault();
     }
-  });  
+  });
   </script>
 </body>
 </html>
-
